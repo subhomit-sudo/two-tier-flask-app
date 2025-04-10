@@ -1,29 +1,39 @@
-pipeline {
-    agent any
-    
+pipeline{
+    agent any;
     stages{
-        stage("Code"){
+        stage("code"){
             steps{
-                git url: "https://github.com/LondheShubham153/two-tier-flask-app.git", branch: "jenkins"
+                git url :"https://github.com/subhomit-sudo/two-tier-flask-app.git" , branch: "master"
             }
         }
-        stage("Build & Test"){
+        stage("depoly"){
             steps{
-                sh "docker build . -t flaskapp"
+                sh "docker build -t two-tier-flask-app ."
             }
         }
-        stage("Push to DockerHub"){
+        stage("push to DockerHub"){
             steps{
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
+                withCredentials([usernamePassword(
+                    credentialsId:"DockerHubCreds",
+                    passwordVariable: "dockerHubPass",
+                    usernameVariable: "dockerHubUser"
+                    )]){
+                        
                     sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                    sh "docker tag flaskapp ${env.dockerHubUser}/flaskapp:latest"
-                    sh "docker push ${env.dockerHubUser}/flaskapp:latest" 
+                    sh "docker image tag two-tier-flask-app ${env.dockerHubUser}/two-tier-flask-app"
+                    sh "docker push ${env.dockerHubUser}/two-tier-flask-app:latest"
                 }
+                
             }
         }
-        stage("Deploy"){
+        stage("test"){
             steps{
-                sh "docker-compose down && docker-compose up -d"
+                echo ("tester test case likh ke dega")
+            }
+        }
+        stage("deploy"){
+            steps{
+                sh "docker compose up -d --build flask-app"
             }
         }
     }
